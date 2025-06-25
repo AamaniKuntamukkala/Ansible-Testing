@@ -1,6 +1,6 @@
 ---
 - name: Play for Testing Block, Rescue, Always with AWS CLI
-  hosts: pvt
+  hosts: all
   gather_facts: yes
   become: yes
   become_user: root
