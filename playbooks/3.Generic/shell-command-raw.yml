@@ -1,6 +1,6 @@
 ---
 - name: Testing SHELL COMMAND & RAW
-  hosts: testserver01
+  hosts: all
   become: true
   become_user: root
   tasks:
