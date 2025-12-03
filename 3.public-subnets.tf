@@ -1,13 +1,10 @@
-resource "aws_subnet" "public-subnets" {
-  #count             = 4 # 0 1 2
-  count             = length(local.new_public_subnet_cidrs)
-  vpc_id            = aws_vpc.default.id
-  cidr_block        = element(local.new_public_subnet_cidrs, count.index)
-  availability_zone = element(var.azs, count.index)
-  tags = {
-    Name              = "${var.vpc_name}-PublicSubnet-${count.index + 1}"
-    Terraform-Managed = "Yes"
-    Env               = local.new_environment
-    ProjectID         = local.projid
-  }
+resource "azurerm_subnet" "public_subnets" {
+  count                = length(local.new_public_subnet_cidrs)
+  name                 = "${var.vnet_name}-PublicSubnet-${count.index + 1}"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.default.name
+  address_prefixes     = [element(local.new_public_subnet_cidrs, count.index)]
+
+  # Tags are applied at the VNet level in Azure, not directly on subnets.
+  # If you want tagging consistency, you can tag the VNet or NICs instead.
 }
