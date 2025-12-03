@@ -1,20 +1,21 @@
-provider "aws" {
-  region = var.aws_region
+provider "azurerm" {
+  features {}
 }
 
 terraform {
-  required_version = "<= 1.8.5" #Forcing which version of Terraform needs to be used
+  required_version = "<= 1.8.5" # Force Terraform version
+
   required_providers {
-    aws = {
-      version = "<= 6.0.0" #Forcing which version of plugin needs to be used.
-      source  = "hashicorp/aws"
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "<= 4.0.0" # Force provider version (adjust as needed)
     }
   }
-  backend "s3" {
-    bucket         = "workspacesbucket01"
-    key            = "Ansible.tfstate"
-    region         = "us-east-1"
-    # dynamodb_table = "-terraform-locks"
-    encrypt        = true
+
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"          # RG where storage account lives
+    storage_account_name = "tfstateaccount01"    # Storage account name
+    container_name       = "tfstate"             # Blob container name
+    key                  = "Ansible.tfstate"     # State file name
   }
 }
