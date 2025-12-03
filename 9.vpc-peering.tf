@@ -1,40 +1,34 @@
-data "aws_vpc" "ansible_vpc" {
-  id = "vpc-036e5c5d11bdf83de"
+# Existing VNets (like aws_vpc data sources)
+data "azurerm_virtual_network" "default_vnet" {
+  name                = "default-vnet"
+  resource_group_name = "rg-default"
 }
 
-data "aws_route_table" "ansible_vpc_rt" {
-  subnet_id = "subnet-05597e96c163e70fd"
-  #If subnet_id giving errors use route table id as below
-  #route_table_id = data.aws_route_table.ansible_vpc_rt.id
+data "azurerm_virtual_network" "ansible_vnet" {
+  name                = "ansible-vnet"
+  resource_group_name = "rg-ansible"
 }
 
-resource "aws_vpc_peering_connection" "ansible-vpc-peering" {
-  peer_vpc_id = data.aws_vpc.ansible_vpc.id
-  vpc_id      = aws_vpc.default.id
-  auto_accept = true
-  accepter {
-    allow_remote_vpc_dns_resolution = true
-  }
-
-  requester {
-    allow_remote_vpc_dns_resolution = true
-  }
-
-  tags = {
-    Name = "Ansible-${var.vpc_name}-Peering"
-  }
+# VNet Peering from default to ansible
+resource "azurerm_virtual_network_peering" "default_to_ansible" {
+  name                      = "default-to-ansible"
+  resource_group_name       = data.azurerm_virtual_network.default_vnet.resource_group_name
+  virtual_network_name      = data.azurerm_virtual_network.default_vnet.name
+  remote_virtual_network_id = data.azurerm_virtual_network.ansible_vnet.id
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = false
+  use_remote_gateways          = false
 }
 
-resource "aws_route" "peering-to-ansible-vpc" {
-  route_table_id            = aws_route_table.terraform-public.id
-  destination_cidr_block    = "10.0.0.0/16"
-  vpc_peering_connection_id = aws_vpc_peering_connection.ansible-vpc-peering.id
-  #depends_on                = [aws_route_table.terraform-public]
-}
-
-resource "aws_route" "peering-from-ansible-vpc" {
-  route_table_id            = data.aws_route_table.ansible_vpc_rt.id
-  destination_cidr_block    = "10.37.0.0/16"
-  vpc_peering_connection_id = aws_vpc_peering_connection.ansible-vpc-peering.id
-  #depends_on                = [aws_route_table.terraform-public]
+# VNet Peering from ansible to default
+resource "azurerm_virtual_network_peering" "ansible_to_default" {
+  name                      = "ansible-to-default"
+  resource_group_name       = data.azurerm_virtual_network.ansible_vnet.resource_group_name
+  virtual_network_name      = data.azurerm_virtual_network.ansible_vnet.name
+  remote_virtual_network_id = data.azurerm_virtual_network.default_vnet.id
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = false
+  use_remote_gateways          = false
 }
